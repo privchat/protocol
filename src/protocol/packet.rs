@@ -170,8 +170,8 @@ impl ConnectAckPacket {
         }
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::ConnectAck)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::ConnectAck)
     }
 }
 
@@ -189,8 +189,8 @@ impl DisconnectPacket {
         }
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::Disconnect)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::Disconnect)
     }
 }
 
@@ -225,8 +225,8 @@ impl SendPacket {
         }
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::Send)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::Send)
     }
 
     pub fn verify_string(&self) -> String {
@@ -295,8 +295,8 @@ impl RecvPacket {
             payload: Vec::new(),
         }
     }
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::Recv)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::Recv)
     }
 
     pub fn verify_string(&self) -> String {
@@ -323,8 +323,8 @@ impl PingPacket {
         Self
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::Ping)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::Ping)
     }
 }
 
@@ -335,8 +335,8 @@ impl PongPacket {
     pub fn new() -> Self {
         Self
     }
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::Pong)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::Pong)
     }
 }
 
@@ -358,8 +358,8 @@ impl SendAckPacket {
         }
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::SendAck)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::SendAck)
     }
 }
 
@@ -377,8 +377,8 @@ impl RecvAckPacket {
         }
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::RecvAck)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::RecvAck)
     }
 }
 
@@ -403,8 +403,8 @@ impl SubPacket {
             param: None,
         }
     }
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::Sub)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::Sub)
     }
 }
 
@@ -428,7 +428,7 @@ impl SubAckPacket {
         }
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::SubAck)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::SubAck)
     }
 }

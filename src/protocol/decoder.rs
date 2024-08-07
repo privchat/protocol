@@ -15,6 +15,10 @@ impl Decoder {
         Self { data, offset: 0 }
     }
 
+    pub fn size() -> usize {
+        0
+    }
+
     pub fn read_byte(&mut self) -> u8 {
         if self.offset >= self.data.len() {
             panic!(
