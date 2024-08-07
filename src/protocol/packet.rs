@@ -139,8 +139,8 @@ impl ConnectPacket {
         }
     }
 
-    pub fn create_packet(self) -> Packet<Self> {
-        Packet::new(self, PacketType::Connect)
+    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
+        Packet::new(Box::new(self), PacketType::Connect)
     }
 
     pub fn as_any(&self) -> &dyn Any {
