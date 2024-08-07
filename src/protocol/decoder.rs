@@ -69,7 +69,7 @@ impl Decoder {
         }
         let str_uint8_array = &self.data[self.offset..self.offset + len];
         self.offset += len;
-        self.uint_to_string(str_uint8_array)
+        String::from_utf8(str_uint8_array.to_vec()).expect("Invalid UTF-8 sequence")
     }
 
     // 读取剩余的字节

@@ -57,23 +57,9 @@ impl Encoder {
     }
 
     pub fn write_string(&mut self, s: &str) {
-        if !s.is_empty() {
-            let str_array = self.string_to_uint(s);
-            self.write_int16(str_array.len() as i16);
-            self.write_bytes(&str_array);
-        } else {
-            self.write_int16(0);
-        }
-    }
-
-    fn string_to_uint(&self, str: &str) -> Vec<u8> {
-        let string = str.encode_utf16().collect::<Vec<u16>>();
-        let mut uint_array = Vec::new();
-        for char_code in string {
-            uint_array.push((char_code & 0xff) as u8);
-            uint_array.push((char_code >> 8) as u8);
-        }
-        uint_array
+        let str_bytes = s.as_bytes();
+        self.write_int16(str_bytes.len() as i16);
+        self.write_bytes(str_bytes);
     }
 
     pub fn to_uint8_array(&self) -> Vec<u8> {
