@@ -3,10 +3,10 @@ use std::any::Any;
 
 static mut SERVER_VERSION: u8 = 0; // 服务端返回的协议版本
 
-// 保留位
+// 消息类型
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub enum PacketType {
-    Reserved = 0,
+pub enum MesssageType {
+    Reserved = 0,   // 保留位
     Connect = 1,    // 客户端请求连接到服务器(c2s)
     ConnectAck = 2, // 服务端收到连接请求后确认的报文(s2c)
     Send = 3,       // 发送消息(c2s)
@@ -16,8 +16,8 @@ pub enum PacketType {
     Ping = 7,       // ping请求
     Pong = 8,       // 对ping请求的相应
     Disconnect = 9, // 请求断开连接
-    Sub = 10,       // 订阅
-    SubAck = 11,    // 订阅确认
+    Subscribe = 10,       // 订阅
+    SubscribeAck = 11,    // 订阅确认
 }
 
 // 设置
@@ -87,20 +87,20 @@ pub struct Packet<T> {
     pub sync_once: bool,
     pub dup: bool,
     pub remaining_length: usize,
-    pub packet_type: PacketType,
-    pub packet_object: T,
+    pub message_type: MesssageType,
+    pub message_object: T,
 }
 
 impl<T> Packet<T> {
-    pub fn new(packet_object: T, packet_type: PacketType) -> Self {
+    pub fn new(message_object: T, message_type: MesssageType) -> Self {
         Self {
             no_persist: false,
             reddot: false,
             sync_once: false,
             dup: false,
             remaining_length: 0,
-            packet_type,
-            packet_object,
+            message_type,
+            message_object,
         }
     }
 
@@ -110,11 +110,11 @@ impl<T> Packet<T> {
         self.sync_once = f.sync_once;
         self.dup = f.dup;
         self.remaining_length = f.remaining_length;
-        self.packet_type = f.packet_type;
+        self.message_type = f.message_type;
     }
 }
 
-// 连接包
+// 连接消息
 #[derive(Debug)]
 pub struct ConnectMessage {
     pub version: u8,           // 版本
@@ -140,7 +140,7 @@ impl ConnectMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::Connect)
+        Packet::new(Box::new(self), MesssageType::Connect)
     }
 
     pub fn as_any(&self) -> &dyn Any {
@@ -148,7 +148,7 @@ impl ConnectMessage {
     }
 }
 
-// 连接回执包
+// 连接回执消息
 pub struct ConnectAckMessage {
     pub server_version: u8, // 服务端版本
     pub server_key: String, // 通过客户端的RSA公钥加密的服务端DH公钥
@@ -171,11 +171,11 @@ impl ConnectAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::ConnectAck)
+        Packet::new(Box::new(self), MesssageType::ConnectAck)
     }
 }
 
-// 断开包
+// 断开消息
 pub struct DisconnectMessage {
     pub reason_code: u8, // 原因码
     pub reason: String,  // 具体断开原因
@@ -190,11 +190,11 @@ impl DisconnectMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::Disconnect)
+        Packet::new(Box::new(self), MesssageType::Disconnect)
     }
 }
 
-// 发送包
+// 发送消息
 #[derive(Clone)]
 pub struct SendMessage {
     pub setting: Setting, // 设置
@@ -226,7 +226,7 @@ impl SendMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::Send)
+        Packet::new(Box::new(self), MesssageType::Send)
     }
 
     pub fn verify_string(&self) -> String {
@@ -256,7 +256,7 @@ impl From<u8> for StreamFlag {
     }
 }
 
-// 收消息包
+// 收消息
 pub struct RecvMessage {
     pub setting: Setting,        // 设置
     pub msg_key: String,         // 用于验证此消息是否合法（仿中间人篡改）
@@ -296,7 +296,7 @@ impl RecvMessage {
         }
     }
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::Recv)
+        Packet::new(Box::new(self), MesssageType::Recv)
     }
 
     pub fn verify_string(&self) -> String {
@@ -315,7 +315,7 @@ impl RecvMessage {
     }
 }
 
-// ping
+// ping 消息
 pub struct PingMessage;
 
 impl PingMessage {
@@ -324,11 +324,11 @@ impl PingMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::Ping)
+        Packet::new(Box::new(self), MesssageType::Ping)
     }
 }
 
-// pong
+// pong 消息
 pub struct PongMessage;
 
 impl PongMessage {
@@ -336,7 +336,7 @@ impl PongMessage {
         Self
     }
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::Pong)
+        Packet::new(Box::new(self), MesssageType::Pong)
     }
 }
 
@@ -359,11 +359,11 @@ impl SendAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::SendAck)
+        Packet::new(Box::new(self), MesssageType::SendAck)
     }
 }
 
-// 收到消息回执给服务端的包
+// 收到消息回执给服务端的消息
 pub struct RecvAckMessage {
     pub message_id: String,
     pub message_seq: u32,
@@ -378,12 +378,12 @@ impl RecvAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::RecvAck)
+        Packet::new(Box::new(self), MesssageType::RecvAck)
     }
 }
 
-// 订阅包
-pub struct SubMessage {
+// 订阅消息
+pub struct SubscribeMessage {
     pub setting: u8,           // 设置
     pub client_msg_no: String, // 客户端唯一消息编号
     pub channel_id: String,    // 频道ID
@@ -392,7 +392,7 @@ pub struct SubMessage {
     pub param: Option<String>, // 参数
 }
 
-impl SubMessage {
+impl SubscribeMessage {
     pub fn new() -> Self {
         Self {
             setting: 0,
@@ -404,12 +404,12 @@ impl SubMessage {
         }
     }
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::Sub)
+        Packet::new(Box::new(self), MesssageType::Subscribe)
     }
 }
 
-// 订阅确认包
-pub struct SubAckMessage {
+// 订阅确认消息
+pub struct SubscribeAckMessage {
     pub client_msg_no: String, // 客户端唯一消息编号
     pub channel_id: String,    // 频道ID
     pub channel_type: u8,      // 频道类型
@@ -417,7 +417,7 @@ pub struct SubAckMessage {
     pub reason_code: u8,
 }
 
-impl SubAckMessage {
+impl SubscribeAckMessage {
     pub fn new() -> Self {
         Self {
             client_msg_no: String::new(),
@@ -429,6 +429,6 @@ impl SubAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), PacketType::SubAck)
+        Packet::new(Box::new(self), MesssageType::SubscribeAck)
     }
 }

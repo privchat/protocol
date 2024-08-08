@@ -7,49 +7,49 @@ use std::collections::HashMap;
 use crate::protocol::decoder::Decoder;
 use crate::protocol::encoder::Encoder;
 use crate::protocol::packet::{
-    ConnectAckMessage, ConnectMessage, DisconnectMessage, Packet, PacketType, PingMessage, PongMessage,
-    RecvAckMessage, RecvMessage, SendAckMessage, SendMessage, Setting, SubAckMessage, SubMessage,
+    ConnectAckMessage, ConnectMessage, DisconnectMessage, Packet, MesssageType, PingMessage, PongMessage,
+    RecvAckMessage, RecvMessage, SendAckMessage, SendMessage, Setting, SubscribeAckMessage, SubscribeMessage,
 };
 use crate::protocol::security::SecurityManager;
 
 static mut SERVER_VERSION: u8 = 0; // 服务端返回的协议版本
 
 pub struct Protocol {
-    packet_encode_map: HashMap<PacketType, fn(&dyn Any) -> Vec<u8>>,
+    message_encode_map: HashMap<MesssageType, fn(&dyn Any) -> Vec<u8>>,
     packet_decode_map:
-        HashMap<PacketType, fn(&Packet<Box<dyn Any>>, &mut Decoder) -> Packet<Box<dyn Any>>>,
+        HashMap<MesssageType, fn(&Packet<Box<dyn Any>>, &mut Decoder) -> Packet<Box<dyn Any>>>,
 }
 
 impl Protocol {
     pub fn new() -> Self {
-        let mut packet_encode_map: HashMap<PacketType, fn(&dyn Any) -> Vec<u8>> = HashMap::new();
-        packet_encode_map.insert(PacketType::Connect, Self::encode_connect);
-        packet_encode_map.insert(PacketType::Send, Self::encode_send);
-        packet_encode_map.insert(PacketType::RecvAck, Self::encode_recv_ack);
-        packet_encode_map.insert(PacketType::Sub, Self::encode_sub);
+        let mut message_encode_map: HashMap<MesssageType, fn(&dyn Any) -> Vec<u8>> = HashMap::new();
+        message_encode_map.insert(MesssageType::Connect, Self::encode_connect_message);
+        message_encode_map.insert(MesssageType::Send, Self::encode_send_message);
+        message_encode_map.insert(MesssageType::RecvAck, Self::encode_recv_ack_message);
+        message_encode_map.insert(MesssageType::Subscribe, Self::encode_subscribe_message);
 
         let mut packet_decode_map: HashMap<
-            PacketType,
+            MesssageType,
             fn(&Packet<Box<dyn Any>>, &mut Decoder) -> Packet<Box<dyn Any>>,
         > = HashMap::new();
-        packet_decode_map.insert(PacketType::Connect, Self::decode_connect);
-        packet_decode_map.insert(PacketType::ConnectAck, Self::decode_connect_ack);
-        packet_decode_map.insert(PacketType::Recv, Self::decode_recv_packet);
-        packet_decode_map.insert(PacketType::SendAck, Self::decode_send_ack_packet);
-        packet_decode_map.insert(PacketType::Disconnect, Self::decode_disconnect);
-        packet_decode_map.insert(PacketType::SubAck, Self::decode_sub_ack);
+        packet_decode_map.insert(MesssageType::Connect, Self::decode_connect_message);
+        packet_decode_map.insert(MesssageType::ConnectAck, Self::decode_connect_ack_message);
+        packet_decode_map.insert(MesssageType::Recv, Self::decode_recv_message);
+        packet_decode_map.insert(MesssageType::SendAck, Self::decode_send_ack_message);
+        packet_decode_map.insert(MesssageType::Disconnect, Self::decode_disconnect_message);
+        packet_decode_map.insert(MesssageType::SubscribeAck, Self::decode_subscribe_ack_message);
 
         Self {
-            packet_encode_map,
+            message_encode_map,
             packet_decode_map,
         }
     }
 
     pub fn encode(&self, packet: &Packet<Box<dyn Any>>) -> Vec<u8> {
         let mut data = Vec::new();
-        if packet.packet_type != PacketType::Ping && packet.packet_type != PacketType::Pong {
-            let packet_encode_func = self.packet_encode_map.get(&packet.packet_type).unwrap();
-            let body = packet_encode_func(&*packet.packet_object);
+        if packet.message_type != MesssageType::Ping && packet.message_type != MesssageType::Pong {
+            let packet_encode_func = self.message_encode_map.get(&packet.message_type).unwrap();
+            let body = packet_encode_func(&*packet.message_object);
             let header = Self::encode_framer(packet, body.len());
             data.extend(header);
             data.extend(body);
@@ -63,20 +63,20 @@ impl Protocol {
     pub fn decode(&self, data: &[u8]) -> Packet<Box<dyn Any>> {
         let mut decoder = Decoder::new(data.to_vec());
         let f = Self::decode_framer(&mut decoder);
-        if f.packet_type == PacketType::Ping {
-            return Packet::new(Box::new(PingMessage::new()), PacketType::Ping);
+        if f.message_type == MesssageType::Ping {
+            return Packet::new(Box::new(PingMessage::new()), MesssageType::Ping);
         }
-        if f.packet_type == PacketType::Pong {
-            return Packet::new(Box::new(PongMessage::new()), PacketType::Pong);
+        if f.message_type == MesssageType::Pong {
+            return Packet::new(Box::new(PongMessage::new()), MesssageType::Pong);
         }
         let packet_decode_func = self
             .packet_decode_map
-            .get(&f.packet_type)
-            .unwrap_or_else(|| panic!("不支持的包类型: {:?}", f.packet_type));
+            .get(&f.message_type)
+            .unwrap_or_else(|| panic!("不支持的包类型: {:?}", f.message_type));
         packet_decode_func(&f, &mut decoder)
     }
 
-    fn encode_connect(message: &dyn Any) -> Vec<u8> {
+    fn encode_connect_message(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
         let p = message.downcast_ref::<ConnectMessage>().unwrap();
         enc.write_uint8(p.version);
@@ -89,7 +89,7 @@ impl Protocol {
         enc.to_uint8_array()
     }
 
-    fn encode_send(message: &dyn Any) -> Vec<u8> {
+    fn encode_send_message(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
         let mut p = message.downcast_ref::<SendMessage>().unwrap().clone(); // 克隆 SendMessage
     
@@ -133,9 +133,9 @@ impl Protocol {
         enc.to_uint8_array()
     }
 
-    fn encode_sub(message: &dyn Any) -> Vec<u8> {
+    fn encode_subscribe_message(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
-        let p = message.downcast_ref::<SubMessage>().unwrap();
+        let p = message.downcast_ref::<SubscribeMessage>().unwrap();
         enc.write_uint8(p.setting);
         enc.write_string(&p.client_msg_no);
         enc.write_string(&p.channel_id);
@@ -145,7 +145,7 @@ impl Protocol {
         enc.to_uint8_array()
     }
 
-    fn encode_recv_ack(message: &dyn Any) -> Vec<u8> {
+    fn encode_recv_ack_message(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
         let p = message.downcast_ref::<RecvAckMessage>().unwrap();
         let message_id_biguint = BigUint::parse_bytes(p.message_id.as_bytes(), 10).unwrap();
@@ -154,10 +154,10 @@ impl Protocol {
         enc.to_uint8_array()
     }
 
-    fn decode_connect_ack(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
+    fn decode_connect_ack_message(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
         let mut p = ConnectAckMessage::new();
 
-        if f.packet_type == PacketType::ConnectAck {
+        if f.message_type == MesssageType::ConnectAck {
             p.server_version = decoder.read_byte();
             unsafe {
                 SERVER_VERSION = p.server_version;
@@ -173,10 +173,10 @@ impl Protocol {
             p.node_id = decoder.read_int64().into();
         }
 
-        Packet::new(Box::new(p), PacketType::ConnectAck)
+        Packet::new(Box::new(p), MesssageType::ConnectAck)
     }
 
-    fn decode_connect(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
+    fn decode_connect_message(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
         let mut p = ConnectMessage::new();
 
         p.version = decoder.read_byte();
@@ -186,17 +186,17 @@ impl Protocol {
         p.token = decoder.read_string();
         p.client_timestamp = decoder.read_int64().to_u64().unwrap() as i64;
         p.client_key = decoder.read_string();
-        Packet::new(Box::new(p), PacketType::Connect)
+        Packet::new(Box::new(p), MesssageType::Connect)
     }
 
-    fn decode_disconnect(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
+    fn decode_disconnect_message(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
         let mut p = DisconnectMessage::new();
         p.reason_code = decoder.read_byte();
         p.reason = decoder.read_string();
-        Packet::new(Box::new(p), PacketType::Disconnect)
+        Packet::new(Box::new(p), MesssageType::Disconnect)
     }
 
-    fn decode_recv_packet(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
+    fn decode_recv_message(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
         let mut p = RecvMessage::new();
 
         p.setting = Setting::from_uint8(decoder.read_byte());
@@ -220,10 +220,10 @@ impl Protocol {
             p.topic = Some(decoder.read_string());
         }
         p.payload = decoder.read_remaining();
-        Packet::new(Box::new(p), PacketType::Recv)
+        Packet::new(Box::new(p), MesssageType::Recv)
     }
 
-    fn decode_send_ack_packet(
+    fn decode_send_ack_message(
         f: &Packet<Box<dyn Any>>,
         decoder: &mut Decoder,
     ) -> Packet<Box<dyn Any>> {
@@ -232,31 +232,31 @@ impl Protocol {
         p.client_seq = decoder.read_int32();
         p.message_seq = decoder.read_int32();
         p.reason_code = decoder.read_byte();
-        Packet::new(Box::new(p), PacketType::SendAck)
+        Packet::new(Box::new(p), MesssageType::SendAck)
     }
 
-    fn decode_sub_ack(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
-        let mut p = SubAckMessage::new();
+    fn decode_subscribe_ack_message(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
+        let mut p = SubscribeAckMessage::new();
 
         p.client_msg_no = decoder.read_string();
         p.channel_id = decoder.read_string();
         p.channel_type = decoder.read_byte();
         p.action = decoder.read_byte();
         p.reason_code = decoder.read_byte();
-        Packet::new(Box::new(p), PacketType::SubAck)
+        Packet::new(Box::new(p), MesssageType::SubscribeAck)
     }
 
     // 编码头部
     fn encode_framer(f: &Packet<Box<dyn Any>>, remaining_length: usize) -> Vec<u8> {
-        if f.packet_type == PacketType::Ping || f.packet_type == PacketType::Pong {
-            return vec![(f.packet_type as u8) << 4];
+        if f.message_type == MesssageType::Ping || f.message_type == MesssageType::Pong {
+            return vec![(f.message_type as u8) << 4];
         }
         let mut headers = Vec::new();
         let type_and_flags = (Protocol::encode_bool(f.dup) << 3)
             | (Protocol::encode_bool(f.sync_once) << 2)
             | (Protocol::encode_bool(f.reddot) << 1)
             | Protocol::encode_bool(f.no_persist);
-        headers.push((f.packet_type as u8) << 4 | type_and_flags);
+        headers.push((f.message_type as u8) << 4 | type_and_flags);
         let vlen = Protocol::encode_variable_length(remaining_length);
         headers.extend(vlen);
         headers
@@ -270,11 +270,11 @@ impl Protocol {
             sync_once: ((b >> 2) & 0x01) > 0,
             dup: ((b >> 3) & 0x01) > 0,
             remaining_length: 0,
-            packet_type: PacketType::Reserved,
-            packet_object: Box::new(()) as Box<dyn Any>,
+            message_type: MesssageType::Reserved,
+            message_object: Box::new(()) as Box<dyn Any>,
         };
-        f.packet_type = unsafe { std::mem::transmute(b >> 4) };
-        if f.packet_type != PacketType::Ping && f.packet_type != PacketType::Pong {
+        f.message_type = unsafe { std::mem::transmute(b >> 4) };
+        if f.message_type != MesssageType::Ping && f.message_type != MesssageType::Pong {
             f.remaining_length = decoder.read_variable_length() as usize;
         }
         f
@@ -322,6 +322,6 @@ fn get_uuid() -> String {
 
 impl<T: Any> Packet<T> {
     pub fn as_any(&self) -> &dyn Any {
-        &self.packet_object
+        &self.message_object
     }
 }
