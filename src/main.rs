@@ -1,13 +1,11 @@
 mod protocol;
 
-use num_bigint::BigUint;
 use protocol::packet::*;
-use protocol::encoder::*;
 use protocol::protocol::Protocol;
 
 fn main() {
-    // 示例：创建一个 ConnectPacket 并编码
-    let mut connect_packet = ConnectPacket::new();
+    // 示例：创建一个 ConnectMessage 并编码
+    let mut connect_packet = ConnectMessage::new();
     connect_packet.version = 1;
     connect_packet.client_key = String::from("client_key");
     connect_packet.device_id = String::from("device_id");
@@ -19,7 +17,7 @@ fn main() {
     // 创建 Protocol 实例
     let protocol = Protocol::new();
 
-    // 编码 ConnectPacket
+    // 编码 ConnectMessage
     let encoded = protocol.encode(&connect_packet.create_packet());
 
     // 打印编码后的数据
@@ -28,10 +26,10 @@ fn main() {
     // 解码数据
     let decoded_packet = protocol.decode(&encoded);
 
-    // 尝试将解码后的 Packet 转换回 ConnectPacket
-    if let Some(decoded_connect_packet) = decoded_packet.packet_object.downcast_ref::<ConnectPacket>() {
-        println!("Decoded ConnectPacket: {:?}", decoded_connect_packet);
+    // 尝试将解码后的 Packet 转换回 ConnectMessage
+    if let Some(decoded_connect_packet) = decoded_packet.packet_object.downcast_ref::<ConnectMessage>() {
+        println!("Decoded ConnectMessage: {:?}", decoded_connect_packet);
     } else {
-        println!("Failed to decode ConnectPacket");
+        println!("Failed to decode ConnectMessage");
     }
 }

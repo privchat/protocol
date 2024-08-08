@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use crate::protocol::decoder::Decoder;
 use crate::protocol::encoder::Encoder;
 use crate::protocol::packet::{
-    ConnectAckPacket, ConnectPacket, DisconnectPacket, Packet, PacketType, PingPacket, PongPacket,
-    RecvAckPacket, RecvPacket, SendAckPacket, SendPacket, Setting, SubAckPacket, SubPacket,
+    ConnectAckMessage, ConnectMessage, DisconnectMessage, Packet, PacketType, PingMessage, PongMessage,
+    RecvAckMessage, RecvMessage, SendAckMessage, SendMessage, Setting, SubAckMessage, SubMessage,
 };
 use crate::protocol::security::SecurityManager;
 
@@ -64,10 +64,10 @@ impl Protocol {
         let mut decoder = Decoder::new(data.to_vec());
         let f = Self::decode_framer(&mut decoder);
         if f.packet_type == PacketType::Ping {
-            return Packet::new(Box::new(PingPacket::new()), PacketType::Ping);
+            return Packet::new(Box::new(PingMessage::new()), PacketType::Ping);
         }
         if f.packet_type == PacketType::Pong {
-            return Packet::new(Box::new(PongPacket::new()), PacketType::Pong);
+            return Packet::new(Box::new(PongMessage::new()), PacketType::Pong);
         }
         let packet_decode_func = self
             .packet_decode_map
@@ -78,7 +78,7 @@ impl Protocol {
 
     fn encode_connect(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
-        let p = message.downcast_ref::<ConnectPacket>().unwrap();
+        let p = message.downcast_ref::<ConnectMessage>().unwrap();
         enc.write_uint8(p.version);
         enc.write_uint8(p.device_flag);
         enc.write_string(&p.device_id);
@@ -91,7 +91,7 @@ impl Protocol {
 
     fn encode_send(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
-        let mut p = message.downcast_ref::<SendPacket>().unwrap().clone(); // 克隆 SendPacket
+        let mut p = message.downcast_ref::<SendMessage>().unwrap().clone(); // 克隆 SendMessage
     
         enc.write_uint8(p.setting.to_uint8());
         enc.write_int32(p.client_seq as i32);
@@ -135,7 +135,7 @@ impl Protocol {
 
     fn encode_sub(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
-        let p = message.downcast_ref::<SubPacket>().unwrap();
+        let p = message.downcast_ref::<SubMessage>().unwrap();
         enc.write_uint8(p.setting);
         enc.write_string(&p.client_msg_no);
         enc.write_string(&p.channel_id);
@@ -147,7 +147,7 @@ impl Protocol {
 
     fn encode_recv_ack(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
-        let p = message.downcast_ref::<RecvAckPacket>().unwrap();
+        let p = message.downcast_ref::<RecvAckMessage>().unwrap();
         let message_id_biguint = BigUint::parse_bytes(p.message_id.as_bytes(), 10).unwrap();
         enc.write_int64(&message_id_biguint);
         enc.write_int32(p.message_seq as i32);
@@ -155,7 +155,7 @@ impl Protocol {
     }
 
     fn decode_connect_ack(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
-        let mut p = ConnectAckPacket::new();
+        let mut p = ConnectAckMessage::new();
 
         if f.packet_type == PacketType::ConnectAck {
             p.server_version = decoder.read_byte();
@@ -177,7 +177,7 @@ impl Protocol {
     }
 
     fn decode_connect(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
-        let mut p = ConnectPacket::new();
+        let mut p = ConnectMessage::new();
 
         p.version = decoder.read_byte();
         p.device_flag = decoder.read_byte();
@@ -190,14 +190,14 @@ impl Protocol {
     }
 
     fn decode_disconnect(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
-        let mut p = DisconnectPacket::new();
+        let mut p = DisconnectMessage::new();
         p.reason_code = decoder.read_byte();
         p.reason = decoder.read_string();
         Packet::new(Box::new(p), PacketType::Disconnect)
     }
 
     fn decode_recv_packet(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
-        let mut p = RecvPacket::new();
+        let mut p = RecvMessage::new();
 
         p.setting = Setting::from_uint8(decoder.read_byte());
         p.msg_key = decoder.read_string();
@@ -227,7 +227,7 @@ impl Protocol {
         f: &Packet<Box<dyn Any>>,
         decoder: &mut Decoder,
     ) -> Packet<Box<dyn Any>> {
-        let mut p = SendAckPacket::new();
+        let mut p = SendAckMessage::new();
         p.message_id = decoder.read_int64().into();
         p.client_seq = decoder.read_int32();
         p.message_seq = decoder.read_int32();
@@ -236,7 +236,7 @@ impl Protocol {
     }
 
     fn decode_sub_ack(f: &Packet<Box<dyn Any>>, decoder: &mut Decoder) -> Packet<Box<dyn Any>> {
-        let mut p = SubAckPacket::new();
+        let mut p = SubAckMessage::new();
 
         p.client_msg_no = decoder.read_string();
         p.channel_id = decoder.read_string();

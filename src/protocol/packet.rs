@@ -116,7 +116,7 @@ impl<T> Packet<T> {
 
 // 连接包
 #[derive(Debug)]
-pub struct ConnectPacket {
+pub struct ConnectMessage {
     pub version: u8,           // 版本
     pub client_key: String,    // 客户端key
     pub device_id: String,     // 设备ID
@@ -126,7 +126,7 @@ pub struct ConnectPacket {
     pub token: String,         // 用户token
 }
 
-impl ConnectPacket {
+impl ConnectMessage {
     pub fn new() -> Self {
         Self {
             version: 0,
@@ -149,7 +149,7 @@ impl ConnectPacket {
 }
 
 // 连接回执包
-pub struct ConnectAckPacket {
+pub struct ConnectAckMessage {
     pub server_version: u8, // 服务端版本
     pub server_key: String, // 通过客户端的RSA公钥加密的服务端DH公钥
     pub salt: String,       // salt
@@ -158,7 +158,7 @@ pub struct ConnectAckPacket {
     pub node_id: BigInt,    // 节点ID
 }
 
-impl ConnectAckPacket {
+impl ConnectAckMessage {
     pub fn new() -> Self {
         Self {
             server_version: 0,
@@ -176,12 +176,12 @@ impl ConnectAckPacket {
 }
 
 // 断开包
-pub struct DisconnectPacket {
+pub struct DisconnectMessage {
     pub reason_code: u8, // 原因码
     pub reason: String,  // 具体断开原因
 }
 
-impl DisconnectPacket {
+impl DisconnectMessage {
     pub fn new() -> Self {
         Self {
             reason_code: 0,
@@ -196,7 +196,7 @@ impl DisconnectPacket {
 
 // 发送包
 #[derive(Clone)]
-pub struct SendPacket {
+pub struct SendMessage {
     pub setting: Setting, // 设置
     pub client_seq: u32,
     pub client_msg_no: String, // 客户端唯一消息编号（用于消息去重）
@@ -209,7 +209,7 @@ pub struct SendPacket {
     pub payload: Vec<u8>, // 负荷数据
 }
 
-impl SendPacket {
+impl SendMessage {
     pub fn new() -> Self {
         Self {
             setting: Setting::new(),
@@ -257,7 +257,7 @@ impl From<u8> for StreamFlag {
 }
 
 // 收消息包
-pub struct RecvPacket {
+pub struct RecvMessage {
     pub setting: Setting,        // 设置
     pub msg_key: String,         // 用于验证此消息是否合法（仿中间人篡改）
     pub message_id: String,      // 消息ID
@@ -275,7 +275,7 @@ pub struct RecvPacket {
     pub payload: Vec<u8>,        // 负荷数据
 }
 
-impl RecvPacket {
+impl RecvMessage {
     pub fn new() -> Self {
         Self {
             setting: Setting::new(),
@@ -316,9 +316,9 @@ impl RecvPacket {
 }
 
 // ping
-pub struct PingPacket;
+pub struct PingMessage;
 
-impl PingPacket {
+impl PingMessage {
     pub fn new() -> Self {
         Self
     }
@@ -329,9 +329,9 @@ impl PingPacket {
 }
 
 // pong
-pub struct PongPacket;
+pub struct PongMessage;
 
-impl PongPacket {
+impl PongMessage {
     pub fn new() -> Self {
         Self
     }
@@ -341,14 +341,14 @@ impl PongPacket {
 }
 
 // 消息发送回执
-pub struct SendAckPacket {
+pub struct SendAckMessage {
     pub client_seq: u32,
     pub message_id: BigInt,
     pub message_seq: u32,
     pub reason_code: u8,
 }
 
-impl SendAckPacket {
+impl SendAckMessage {
     pub fn new() -> Self {
         Self {
             client_seq: 0,
@@ -364,12 +364,12 @@ impl SendAckPacket {
 }
 
 // 收到消息回执给服务端的包
-pub struct RecvAckPacket {
+pub struct RecvAckMessage {
     pub message_id: String,
     pub message_seq: u32,
 }
 
-impl RecvAckPacket {
+impl RecvAckMessage {
     pub fn new() -> Self {
         Self {
             message_id: String::new(),
@@ -383,7 +383,7 @@ impl RecvAckPacket {
 }
 
 // 订阅包
-pub struct SubPacket {
+pub struct SubMessage {
     pub setting: u8,           // 设置
     pub client_msg_no: String, // 客户端唯一消息编号
     pub channel_id: String,    // 频道ID
@@ -392,7 +392,7 @@ pub struct SubPacket {
     pub param: Option<String>, // 参数
 }
 
-impl SubPacket {
+impl SubMessage {
     pub fn new() -> Self {
         Self {
             setting: 0,
@@ -409,7 +409,7 @@ impl SubPacket {
 }
 
 // 订阅确认包
-pub struct SubAckPacket {
+pub struct SubAckMessage {
     pub client_msg_no: String, // 客户端唯一消息编号
     pub channel_id: String,    // 频道ID
     pub channel_type: u8,      // 频道类型
@@ -417,7 +417,7 @@ pub struct SubAckPacket {
     pub reason_code: u8,
 }
 
-impl SubAckPacket {
+impl SubAckMessage {
     pub fn new() -> Self {
         Self {
             client_msg_no: String::new(),
