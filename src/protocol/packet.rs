@@ -21,7 +21,7 @@ pub enum MesssageType {
 }
 
 // 设置
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Setting {
     pub receipt_enabled: bool, // 消息回执是否开启
     pub topic: bool,           // 是否存在话题
@@ -149,6 +149,7 @@ impl ConnectMessage {
 }
 
 // 连接回执消息
+#[derive(Debug)]
 pub struct ConnectAckMessage {
     pub server_version: u8, // 服务端版本
     pub server_key: String, // 通过客户端的RSA公钥加密的服务端DH公钥
@@ -176,6 +177,7 @@ impl ConnectAckMessage {
 }
 
 // 断开消息
+#[derive(Debug)]
 pub struct DisconnectMessage {
     pub reason_code: u8, // 原因码
     pub reason: String,  // 具体断开原因
@@ -195,7 +197,7 @@ impl DisconnectMessage {
 }
 
 // 发送消息
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SendMessage {
     pub setting: Setting, // 设置
     pub client_seq: u32,
@@ -257,6 +259,7 @@ impl From<u8> for StreamFlag {
 }
 
 // 收消息
+#[derive(Debug)]
 pub struct RecvMessage {
     pub setting: Setting,        // 设置
     pub msg_key: String,         // 用于验证此消息是否合法（仿中间人篡改）
@@ -341,6 +344,7 @@ impl PongMessage {
 }
 
 // 消息发送回执
+#[derive(Debug)]
 pub struct SendAckMessage {
     pub client_seq: u32,
     pub message_id: BigInt,
@@ -364,6 +368,7 @@ impl SendAckMessage {
 }
 
 // 收到消息回执给服务端的消息
+#[derive(Debug)]
 pub struct RecvAckMessage {
     pub message_id: String,
     pub message_seq: u32,
@@ -383,6 +388,7 @@ impl RecvAckMessage {
 }
 
 // 订阅消息
+#[derive(Debug)]
 pub struct SubscribeMessage {
     pub setting: u8,           // 设置
     pub client_msg_no: String, // 客户端唯一消息编号
@@ -409,6 +415,7 @@ impl SubscribeMessage {
 }
 
 // 订阅确认消息
+#[derive(Debug)]
 pub struct SubscribeAckMessage {
     pub client_msg_no: String, // 客户端唯一消息编号
     pub channel_id: String,    // 频道ID

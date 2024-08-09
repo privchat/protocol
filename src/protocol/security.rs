@@ -1,18 +1,14 @@
-extern crate aes_gcm;
+use aes_gcm::{Aes128Gcm, KeyInit}; // Or `Aes256Gcm`
+use aes_gcm::aead::{Aead, generic_array::GenericArray}; // 引入 Aead trait
 
-use aes_gcm::aead::{Aead, KeyInit, OsRng};
-use aes_gcm::aes::Aes128;
-use aes_gcm::Aes128Gcm; // Or `Aes256Gcm`
-use aes_gcm::aead::generic_array::GenericArray;
-use std::sync::Mutex;
 use std::str;
-use base64::{engine::general_purpose, Engine as _};
+use std::sync::Mutex;
 
 pub struct SecurityManager {
-    aes_key: String,       // 消息加解密的 aes key
-    aes_iv: String,        // 消息 aes iv
-    registration_id: u32,  // 注册ID
-    device_id: u32,
+    pub aes_key: String,       // 消息加解密的 aes key
+    pub aes_iv: String,        // 消息 aes iv
+    pub registration_id: u32,  // 注册ID
+    pub device_id: u32,
 }
 
 impl SecurityManager {
@@ -44,44 +40,33 @@ impl SecurityManager {
         s.chars().map(|c| c as u8).collect()
     }
 
-    pub fn encryption(&self, message: &str) -> String {
-        let key = GenericArray::from_slice(self.aes_key.as_bytes());
-        let iv = GenericArray::from_slice(self.aes_iv.as_bytes());
+    pub fn encryption(&self, message: &[u8]) -> Result<Vec<u8>, aes_gcm::Error> {
+        // 确保 aes_key 的长度为 16 字节
+        let key_bytes = &self.aes_key.as_bytes()[..16];
+        let key = GenericArray::from_slice(key_bytes);
         let cipher = Aes128Gcm::new(key);
-
-        let ciphertext = cipher.encrypt(iv, message.as_ref())
-            .expect("encryption failure!");
-
-        general_purpose::STANDARD.encode(&ciphertext)
+    
+        // 确保 aes_iv 长度为 12 字节
+        let nonce = GenericArray::from_slice(&self.aes_iv.as_bytes()[..12]); // 取前 12 字节
+    
+        // 加密操作并返回加密后的二进制数据
+        cipher.encrypt(nonce, message)
     }
-
-    pub fn decryption(&self, message: &[u8]) -> Vec<u8> {
-        let key = GenericArray::from_slice(self.aes_key.as_bytes());
-        let iv = GenericArray::from_slice(self.aes_iv.as_bytes());
+    
+    pub fn decryption(&self, message: &[u8]) -> Result<Vec<u8>, aes_gcm::Error> {
+        // 确保 aes_key 的长度为 16 字节
+        let key_bytes = &self.aes_key.as_bytes()[..16];
+        let key = GenericArray::from_slice(key_bytes);
         let cipher = Aes128Gcm::new(key);
-
-        let decoded_message = general_purpose::STANDARD.decode(message).unwrap();
-        let plaintext = cipher.decrypt(iv, decoded_message.as_ref())
-            .expect("decryption failure!");
-
-        plaintext
-    }
-
-    pub fn encryption2(&self, message: &[u8]) -> String {
-        let encoded_string = String::from_utf8_lossy(message);
-        let decoded_string = str::replace(&encoded_string, "\0", "");
-        self.encryption(&decoded_string)
+    
+        // 确保 aes_iv 长度为 12 字节
+        let iv = GenericArray::from_slice(&self.aes_iv.as_bytes()[..12]); // 使用前 12 字节作为 nonce
+    
+        // 解密
+        cipher.decrypt(iv, message)
     }
 
     pub fn uint_to_string(&self, array: &[u8]) -> String {
         String::from_utf8_lossy(array).to_string()
     }
-}
-
-pub fn array_buffer_to_string(b: &[u8]) -> String {
-    uint8_array_to_string(b)
-}
-
-pub fn uint8_array_to_string(arr: &[u8]) -> String {
-    arr.iter().map(|&c| c as char).collect()
 }

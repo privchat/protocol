@@ -49,6 +49,10 @@ impl Decoder {
         n
     }
 
+    pub fn read_uint8(&mut self) -> u8 {
+        self.read_byte()
+    }
+
     // 读取64bit的int数据（Rust没有原生的int64类型，所以这里只能用BigUint接受）
     pub fn read_int64(&mut self) -> BigUint {
         self.read_num(8)
