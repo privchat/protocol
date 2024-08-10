@@ -1,7 +1,7 @@
 use num_bigint::BigInt;
 use std::any::Any;
 
-static mut SERVER_VERSION: u8 = 0; // 服务端返回的协议版本
+static mut PROTOCOL_VERSION: u8 = 0; // 服务端返回的协议版本
 
 // 消息类型
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -151,7 +151,7 @@ impl ConnectMessage {
 // 连接回执消息
 #[derive(Debug)]
 pub struct ConnectAckMessage {
-    pub server_version: u8, // 服务端版本
+    pub protocol_version: u8, // 服务端版本
     pub server_key: String, // 通过客户端的RSA公钥加密的服务端DH公钥
     pub salt: String,       // salt
     pub time_diff: BigInt,  // 客户端时间与服务器的差值，单位毫秒
@@ -162,7 +162,7 @@ pub struct ConnectAckMessage {
 impl ConnectAckMessage {
     pub fn new() -> Self {
         Self {
-            server_version: 0,
+            protocol_version: 0,
             server_key: String::new(),
             salt: String::new(),
             time_diff: BigInt::default(),

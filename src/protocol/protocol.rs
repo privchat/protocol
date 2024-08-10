@@ -14,7 +14,7 @@ use crate::protocol::packet::{
 };
 use crate::protocol::security::SecurityManager;
 
-static mut SERVER_VERSION: u8 = 0; // 服务端返回的协议版本
+static mut PROTOCOL_VERSION: u8 = 0; // 服务端返回的协议版本
 
 pub struct Protocol {
     message_encode_map: HashMap<MesssageType, fn(&dyn Any) -> Vec<u8>>,
@@ -116,7 +116,7 @@ impl Protocol {
     
         enc.write_string(&p.channel_id);
         enc.write_uint8(p.channel_type);
-        if unsafe { SERVER_VERSION } >= 3 {
+        if unsafe { PROTOCOL_VERSION } >= 3 {
             enc.write_int32(p.expire.unwrap_or(0) as i32);
         }
     
@@ -166,7 +166,7 @@ impl Protocol {
         p.channel_id = decoder.read_string();
         p.channel_type = decoder.read_byte();
     
-        if unsafe { SERVER_VERSION } >= 3 {
+        if unsafe { PROTOCOL_VERSION } >= 3 {
             p.expire = Some(decoder.read_int32() as u32);
         }
     
@@ -217,7 +217,7 @@ impl Protocol {
         enc.write_string(&p.channel_id);
         enc.write_uint8(p.channel_type);
         
-        if unsafe { SERVER_VERSION } >= 3 {
+        if unsafe { PROTOCOL_VERSION } >= 3 {
             if let Some(expire) = p.expire {
                 enc.write_int32(expire as i32);
             }
@@ -293,7 +293,7 @@ impl Protocol {
     fn encode_connect_ack_message(message: &dyn Any) -> Vec<u8> {
         let mut enc = Encoder::new();
         let p = message.downcast_ref::<ConnectAckMessage>().unwrap();
-        enc.write_uint8(p.server_version);
+        enc.write_uint8(p.protocol_version);
         
         // 将 time_diff 从 BigInt 转换为 BigUint
         let time_diff = p.time_diff.to_biguint().unwrap_or_else(|| BigUint::from(0u64));
@@ -303,7 +303,7 @@ impl Protocol {
         enc.write_string(&p.server_key);
         enc.write_string(&p.salt);
         
-        if p.server_version >= 4 {
+        if p.protocol_version >= 4 {
             // 将 node_id 从 BigInt 转换为 BigUint
             let node_id = p.node_id.to_biguint().unwrap_or_else(|| BigUint::from(0u64));
             enc.write_int64(&node_id);
@@ -336,9 +336,9 @@ impl Protocol {
         let mut p = ConnectAckMessage::new();
 
         if f.message_type == MesssageType::ConnectAck {
-            p.server_version = decoder.read_byte();
+            p.protocol_version = decoder.read_byte();
             unsafe {
-                SERVER_VERSION = p.server_version;
+                PROTOCOL_VERSION = p.protocol_version;
             }
         }
 
@@ -346,7 +346,7 @@ impl Protocol {
         p.reason_code = decoder.read_byte();
         p.server_key = decoder.read_string();
         p.salt = decoder.read_string();
-        if p.server_version >= 4 {
+        if p.protocol_version >= 4 {
             p.node_id = decoder.read_int64().into();
         }
 
@@ -380,7 +380,7 @@ impl Protocol {
         p.from_uid = decoder.read_string();
         p.channel_id = decoder.read_string();
         p.channel_type = decoder.read_byte();
-        if unsafe { SERVER_VERSION } >= 3 {
+        if unsafe { PROTOCOL_VERSION } >= 3 {
             p.expire = Some(decoder.read_int32() as u32);
         }
         p.client_msg_no = decoder.read_string();

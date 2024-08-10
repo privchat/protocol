@@ -67,7 +67,7 @@ fn main() {
 
     // 继续其他操作，例如解码 ConnectAckMessage
     let mut connect_ack_message = ConnectAckMessage::new();
-    connect_ack_message.server_version = 2;
+    connect_ack_message.protocol_version = 2;
     connect_ack_message.time_diff = BigInt::from(1000);
     connect_ack_message.reason_code = 0;
     connect_ack_message.server_key = server_pub_key_base64.to_string(); // 示例中直接使用
