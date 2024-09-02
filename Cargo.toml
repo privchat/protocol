@@ -8,6 +8,8 @@ rand = "0.8"
 curve25519-dalek = "3.2"
 base64 = "0.22"
 md-5 = "0.10"
+uuid = { version = "1", features = ["v4"] }
 num-bigint = "0.4"
 num-traits = "0.2"
 aes-gcm = "0.10"
+msgtrans = { path = "/Users/zoujiaqing/projects/privchat/msgtrans-rust" }
