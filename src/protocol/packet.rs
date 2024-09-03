@@ -318,31 +318,6 @@ impl RecvMessage {
     }
 }
 
-// ping 消息
-pub struct PingMessage;
-
-impl PingMessage {
-    pub fn new() -> Self {
-        Self
-    }
-
-    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::Ping)
-    }
-}
-
-// pong 消息
-pub struct PongMessage;
-
-impl PongMessage {
-    pub fn new() -> Self {
-        Self
-    }
-    pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::Pong)
-    }
-}
-
 // 消息发送回执
 #[derive(Debug)]
 pub struct SendAckMessage {

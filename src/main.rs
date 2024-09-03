@@ -1,3 +1,4 @@
+
 use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine};
 use md5::{Md5, Digest};
 use protocol::security::SecurityManager;
@@ -105,235 +106,190 @@ fn main() {
     }
 
 
-    // println!("\n\n\n【测试加解密】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 测试加解密
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // /// 
-    // // 需要加密的消息
-    // let message = b"Hello, World!";
+    println!("\n\n\n【测试加解密】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 测试加解密
+    ////////////////////////////////////////////////////////////////////////////////////
+    // 需要加密的消息
+    let message = b"Hello, World!";
 
-    // // 加密
-    // let encrypted = SecurityManager::shared()
-    //     .lock()
-    //     .unwrap()
-    //     .encryption(message)
-    //     .expect("Encryption failed");
+    // 加密
+    let encrypted = SecurityManager::shared()
+       .lock()
+       .unwrap()
+       .encryption(message)
+       .expect("Encryption failed");
 
-    // println!("Encrypted message: {:?}", encrypted);
+    println!("Encrypted message: {:?}", encrypted);
 
-    // // 解密
-    // let decrypted = SecurityManager::shared()
-    //     .lock()
-    //     .unwrap()
-    //     .decryption(&encrypted)
-    //     .expect("Decryption failed");
+    // 解密
+    let decrypted = SecurityManager::shared()
+       .lock()
+       .unwrap()
+       .decryption(&encrypted)
+       .expect("Decryption failed");
 
-    // println!("Decrypted message: {:?}", String::from_utf8(decrypted).expect("Failed to convert to string"));
+    println!("Decrypted message: {:?}", String::from_utf8(decrypted).expect("Failed to convert to string"));
 
 
-    // println!("\n\n\n【发送消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 发送消息
-    // ////////////////////////////////////////////////////////////////////////////////////
+    println!("\n\n\n【发送消息】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 发送消息
+    ////////////////////////////////////////////////////////////////////////////////////
     
-    // // 准备一个 SendMessage 示例
-    // let mut send_message = SendMessage::new();
-    // send_message.setting = Setting::new();
-    // send_message.client_seq = 12345;
-    // send_message.client_msg_no = String::from("unique_msg_no");
-    // send_message.stream_no = String::from("stream_001");
-    // send_message.channel_id = String::from("channel_01");
-    // send_message.channel_type = 1;
-    // send_message.payload = vec![1, 2, 3, 4, 5]; // 示例负荷数据
+    // 准备一个 SendMessage 示例
+    let mut send_message = SendMessage::new();
+    send_message.setting = Setting::new();
+    send_message.client_seq = 12345;
+    send_message.client_msg_no = String::from("unique_msg_no");
+    send_message.stream_no = String::from("stream_001");
+    send_message.channel_id = String::from("channel_01");
+    send_message.channel_type = 1;
+    send_message.payload = vec![1, 2, 3, 4, 5]; // 示例负荷数据
 
-    // // 假设你会将 encoded_send_message 发送给服务端
-    // println!("Encoded SendMessage: {:?}", send_message);
+    // 假设你会将 encoded_send_message 发送给服务端
+    println!("Encoded SendMessage: {:?}", send_message);
 
-    // // 编码 SendMessage
-    // let encoded_send_message = protocol.encode(&send_message.create_packet());
+    // 编码 SendMessage
+    let encoded_send_message = protocol.encode::<SendMessage>(&send_message);
 
-    // // 解码 SendMessage (模拟从服务器接收后的解码过程)
-    // let decoded_send_packet = protocol.decode(&encoded_send_message);
-    // if let Some(decoded_send_message) = decoded_send_packet.message_object.downcast_ref::<SendMessage>() {
-    //     println!("Decoded SendMessage: {:?}", decoded_send_message);
-    // } else {
-    //     println!("Failed to decode SendMessage");
-    // }
+    // 解码 SendMessage (模拟从服务器接收后的解码过程)
+    if let Some(decoded_send_message) = protocol.decode::<SendMessage>(&encoded_send_message) {
+        println!("Decoded SendMessage: {:?}", decoded_send_message);
+    } else {
+        println!("Failed to decode SendMessage");
+    }
 
-    // println!("\n\n\n【发送确认消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 发送确认消息
-    // ////////////////////////////////////////////////////////////////////////////////////
+    println!("\n\n\n【发送确认消息】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 发送确认消息
+    ////////////////////////////////////////////////////////////////////////////////////
 
-    // // 准备一个 SendAckMessage 示例
-    // let mut send_ack_message = SendAckMessage::new();
-    // send_ack_message.client_seq = 54321;
-    // send_ack_message.message_id = BigInt::from(20000000001u64);
-    // send_ack_message.message_seq = 100;
-    // send_ack_message.reason_code = 0; // 表示成功
+    // 准备一个 SendAckMessage 示例
+    let mut send_ack_message = SendAckMessage::new();
+    send_ack_message.client_seq = 54321;
+    send_ack_message.message_id = BigInt::from(20000000001u64);
+    send_ack_message.message_seq = 100;
+    send_ack_message.reason_code = 0; // 表示成功
 
-    // // 编码 SendAckMessage
-    // let encoded_send_ack_message = protocol.encode(&send_ack_message.create_packet());
+    // 编码 SendAckMessage
+    let encoded_send_ack_message = protocol.encode::<SendAckMessage>(&send_ack_message);
 
-    // // 解码 SendAckMessage (模拟从服务器接收后的解码过程)
-    // let decoded_send_ack_packet = protocol.decode(&encoded_send_ack_message);
-    // if let Some(decoded_send_ack_message) = decoded_send_ack_packet.message_object.downcast_ref::<SendAckMessage>() {
-    //     println!("Decoded SendAckMessage: {:?}", decoded_send_ack_message);
-    // } else {
-    //     println!("Failed to decode SendAckMessage");
-    // }
+    // 解码 SendAckMessage (模拟从服务器接收后的解码过程)
+    if let Some(decoded_send_ack_message) = protocol.decode::<SendAckMessage>(&encoded_send_ack_message) {
+        println!("Decoded SendAckMessage: {:?}", decoded_send_ack_message);
+    } else {
+        println!("Failed to decode SendAckMessage");
+    }
 
-    // println!("\n\n\n【断开连接消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 断开连接消息
-    // ////////////////////////////////////////////////////////////////////////////////////
+    println!("\n\n\n【断开连接消息】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 断开连接消息
+    ////////////////////////////////////////////////////////////////////////////////////
 
-    // // 准备一个 DisconnectMessage 示例
-    // let mut disconnect_message = DisconnectMessage::new();
-    // disconnect_message.reason_code = 1;
-    // disconnect_message.reason = String::from("User requested disconnect");
+    // 准备一个 DisconnectMessage 示例
+    let mut disconnect_message = DisconnectMessage::new();
+    disconnect_message.reason_code = 1;
+    disconnect_message.reason = String::from("User requested disconnect");
 
-    // // 编码 DisconnectMessage
-    // let encoded_disconnect_message = protocol.encode(&disconnect_message.create_packet());
+    // 编码 DisconnectMessage
+    let encoded_disconnect_message = protocol.encode::<DisconnectMessage>(&disconnect_message);
 
-    // // 解码 DisconnectMessage (模拟从服务器接收后的解码过程)
-    // let decoded_disconnect_packet = protocol.decode(&encoded_disconnect_message);
-    // if let Some(decoded_disconnect_message) = decoded_disconnect_packet.message_object.downcast_ref::<DisconnectMessage>() {
-    //     println!("Decoded DisconnectMessage: {:?}", decoded_disconnect_message);
-    // } else {
-    //     println!("Failed to decode DisconnectMessage");
-    // }
+    // 解码 DisconnectMessage (模拟从服务器接收后的解码过程)
+    if let Some(decoded_disconnect_message) = protocol.decode::<DisconnectMessage>(&encoded_disconnect_message) {
+        println!("Decoded DisconnectMessage: {:?}", decoded_disconnect_message);
+    } else {
+        println!("Failed to decode DisconnectMessage");
+    }
 
-    // println!("\n\n\n【接收消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 接收消息
-    // ////////////////////////////////////////////////////////////////////////////////////
+    println!("\n\n\n【接收消息】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 接收消息
+    ////////////////////////////////////////////////////////////////////////////////////
 
-    // // 准备一个 RecvMessage 示例
-    // let mut recv_message = RecvMessage::new();
-    // recv_message.setting = Setting::new();
-    // recv_message.msg_key = String::from("msg_key_value");
-    // recv_message.from_uid = String::from("sender_uid");
-    // recv_message.channel_id = String::from("channel_02");
-    // recv_message.message_id = String::from("10000000001");
-    // recv_message.channel_type = 2;
-    // recv_message.payload = vec![6, 7, 8, 9, 10]; // 示例负荷数据
+    // 准备一个 RecvMessage 示例
+    let mut recv_message = RecvMessage::new();
+    recv_message.setting = Setting::new();
+    recv_message.msg_key = String::from("msg_key_value");
+    recv_message.from_uid = String::from("sender_uid");
+    recv_message.channel_id = String::from("channel_02");
+    recv_message.message_id = String::from("10000000001");
+    recv_message.channel_type = 2;
+    recv_message.payload = vec![6, 7, 8, 9, 10]; // 示例负荷数据
 
-    // // 编码 RecvMessage
-    // let encoded_recv_message = protocol.encode(&recv_message.create_packet());
+    // 编码 RecvMessage
+    let encoded_recv_message = protocol.encode::<RecvMessage>(&recv_message);
 
-    // // 解码 RecvMessage (模拟从服务器接收后的解码过程)
-    // let decoded_recv_packet = protocol.decode(&encoded_recv_message);
-    // if let Some(decoded_recv_message) = decoded_recv_packet.message_object.downcast_ref::<RecvMessage>() {
-    //     println!("Decoded RecvMessage: {:?}", decoded_recv_message);
-    // } else {
-    //     println!("Failed to decode RecvMessage");
-    // }
+    // 解码 RecvMessage (模拟从服务器接收后的解码过程)
+    if let Some(decoded_recv_message) = protocol.decode::<RecvMessage>(&encoded_recv_message) {
+        println!("Decoded RecvMessage: {:?}", decoded_recv_message);
+    } else {
+        println!("Failed to decode RecvMessage");
+    }
 
-    // println!("\n\n\n【接收确认消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 接收确认消息
-    // ////////////////////////////////////////////////////////////////////////////////////
+    println!("\n\n\n【接收确认消息】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 接收确认消息
+    ////////////////////////////////////////////////////////////////////////////////////
 
-    // // 准备一个 RecvAckMessage 示例
-    // let mut recv_ack_message = RecvAckMessage::new();
-    // recv_ack_message.message_id = String::from("20000000001");
-    // recv_ack_message.message_seq = 101;
+    // 准备一个 RecvAckMessage 示例
+    let mut recv_ack_message = RecvAckMessage::new();
+    recv_ack_message.message_id = String::from("20000000001");
+    recv_ack_message.message_seq = 101;
 
-    // // 编码 RecvAckMessage
-    // let encoded_recv_ack_message = protocol.encode(&recv_ack_message.create_packet());
+    // 编码 RecvAckMessage
+    let encoded_recv_ack_message = protocol.encode::<RecvAckMessage>(&recv_ack_message);
 
-    // // 解码 RecvAckMessage (模拟从服务器接收后的解码过程)
-    // let decoded_recv_ack_packet = protocol.decode(&encoded_recv_ack_message);
-    // if let Some(decoded_recv_ack_message) = decoded_recv_ack_packet.message_object.downcast_ref::<RecvAckMessage>() {
-    //     println!("Decoded RecvAckMessage: {:?}", decoded_recv_ack_message);
-    // } else {
-    //     println!("Failed to decode RecvAckMessage");
-    // }
+    // 解码 RecvAckMessage (模拟从服务器接收后的解码过程)
+    if let Some(decoded_recv_ack_message) = protocol.decode::<RecvAckMessage>(&encoded_recv_ack_message) {
+        println!("Decoded RecvAckMessage: {:?}", decoded_recv_ack_message);
+    } else {
+        println!("Failed to decode RecvAckMessage");
+    }
 
-    // println!("\n\n\n【Ping 消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- Ping 消息
-    // ////////////////////////////////////////////////////////////////////////////////////
+    println!("\n\n\n【订阅消息】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 订阅消息
+    ////////////////////////////////////////////////////////////////////////////////////
 
-    // // 准备一个 PingMessage 示例
-    // let ping_message = PingMessage::new();
+    // 准备一个 SubscribeMessage 示例
+    let mut subscribe_message = SubscribeMessage::new();
+    subscribe_message.setting = 0;
+    subscribe_message.client_msg_no = String::from("subscribe_msg_no");
+    subscribe_message.channel_id = String::from("subscribe_channel_id");
+    subscribe_message.channel_type = 3;
+    subscribe_message.action = 0; // 订阅动作
 
-    // // 编码 PingMessage
-    // let encoded_ping_message = protocol.encode(&ping_message.create_packet());
+    // 编码 SubscribeMessage
+    let encoded_subscribe_message = protocol.encode::<SubscribeMessage>(&subscribe_message);
 
-    // // 解码 PingMessage (模拟从服务器接收后的解码过程)
-    // let decoded_ping_packet = protocol.decode(&encoded_ping_message);
-    // if let Some(_) = decoded_ping_packet.message_object.downcast_ref::<PingMessage>() {
-    //     println!("Decoded PingMessage successfully");
-    // } else {
-    //     println!("Failed to decode PingMessage");
-    // }
+    // 解码 SubscribeMessage (模拟从服务器接收后的解码过程)
+    if let Some(decoded_subscribe_message) = protocol.decode::<SubscribeMessage>(&encoded_subscribe_message) {
+        println!("Decoded SubscribeMessage: {:?}", decoded_subscribe_message);
+    } else {
+        println!("Failed to decode SubscribeMessage");
+    }
 
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- Pong 消息
-    // ////////////////////////////////////////////////////////////////////////////////////
+    println!("\n\n\n【订阅确认消息】\n\n\n");
+    ////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////// --------- 订阅确认消息
+    ////////////////////////////////////////////////////////////////////////////////////
 
-    // // 准备一个 PongMessage 示例
-    // let pong_message = PongMessage::new();
+    // 准备一个 SubscribeAckMessage 示例
+    let mut subscribe_ack_message = SubscribeAckMessage::new();
+    subscribe_ack_message.client_msg_no = String::from("subscribe_ack_msg_no");
+    subscribe_ack_message.channel_id = String::from("subscribe_ack_channel_id");
+    subscribe_ack_message.channel_type = 3;
+    subscribe_ack_message.action = 1; // 订阅确认
 
-    // // 编码 PongMessage
-    // let encoded_pong_message = protocol.encode(&pong_message.create_packet());
+    // 编码 SubscribeAckMessage
+    let encoded_subscribe_ack_message = protocol.encode::<SubscribeAckMessage>(&subscribe_ack_message);
 
-    // // 解码 PongMessage (模拟从服务器接收后的解码过程)
-    // let decoded_pong_packet = protocol.decode(&encoded_pong_message);
-    // if let Some(_) = decoded_pong_packet.message_object.downcast_ref::<PongMessage>() {
-    //     println!("Decoded PongMessage successfully");
-    // } else {
-    //     println!("Failed to decode PongMessage");
-    // }
-
-    // println!("\n\n\n【订阅消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 订阅消息
-    // ////////////////////////////////////////////////////////////////////////////////////
-
-    // // 准备一个 SubscribeMessage 示例
-    // let mut subscribe_message = SubscribeMessage::new();
-    // subscribe_message.setting = 0;
-    // subscribe_message.client_msg_no = String::from("subscribe_msg_no");
-    // subscribe_message.channel_id = String::from("subscribe_channel_id");
-    // subscribe_message.channel_type = 3;
-    // subscribe_message.action = 0; // 订阅动作
-
-    // // 编码 SubscribeMessage
-    // let encoded_subscribe_message = protocol.encode(&subscribe_message.create_packet());
-
-    // // 解码 SubscribeMessage (模拟从服务器接收后的解码过程)
-    // let decoded_subscribe_packet = protocol.decode(&encoded_subscribe_message);
-    // if let Some(decoded_subscribe_message) = decoded_subscribe_packet.message_object.downcast_ref::<SubscribeMessage>() {
-    //     println!("Decoded SubscribeMessage: {:?}", decoded_subscribe_message);
-    // } else {
-    //     println!("Failed to decode SubscribeMessage");
-    // }
-
-    // println!("\n\n\n【订阅确认消息】\n\n\n");
-    // ////////////////////////////////////////////////////////////////////////////////////
-    // ///////////////////// --------- 订阅确认消息
-    // ////////////////////////////////////////////////////////////////////////////////////
-
-    // // 准备一个 SubscribeAckMessage 示例
-    // let mut subscribe_ack_message = SubscribeAckMessage::new();
-    // subscribe_ack_message.client_msg_no = String::from("subscribe_ack_msg_no");
-    // subscribe_ack_message.channel_id = String::from("subscribe_ack_channel_id");
-    // subscribe_ack_message.channel_type = 3;
-    // subscribe_ack_message.action = 1; // 订阅确认
-
-    // // 编码 SubscribeAckMessage
-    // let encoded_subscribe_ack_message = protocol.encode(&subscribe_ack_message.create_packet());
-
-    // // 解码 SubscribeAckMessage (模拟从服务器接收后的解码过程)
-    // let decoded_subscribe_ack_packet = protocol.decode(&encoded_subscribe_ack_message);
-    // if let Some(decoded_subscribe_ack_message) = decoded_subscribe_ack_packet.message_object.downcast_ref::<SubscribeAckMessage>() {
-    //     println!("Decoded SubscribeAckMessage: {:?}", decoded_subscribe_ack_message);
-    // } else {
-    //     println!("Failed to decode SubscribeAckMessage");
-    // }
+    // 解码 SubscribeAckMessage (模拟从服务器接收后的解码过程)
+    if let Some(decoded_subscribe_ack_message) = protocol.decode::<SubscribeAckMessage>(&encoded_subscribe_ack_message) {
+        println!("Decoded SubscribeAckMessage: {:?}", decoded_subscribe_ack_message);
+    } else {
+        println!("Failed to decode SubscribeAckMessage");
+    }
 
 }

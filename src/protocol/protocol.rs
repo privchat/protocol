@@ -10,7 +10,7 @@ use base64::{engine::general_purpose, Engine as _};
 use crate::protocol::decoder::Decoder;
 use crate::protocol::encoder::Encoder;
 use crate::protocol::packet::{
-    ConnectAckMessage, ConnectMessage, DisconnectMessage, Packet, StreamFlag, MesssageType, PingMessage, PongMessage,
+    ConnectAckMessage, ConnectMessage, DisconnectMessage, Packet, StreamFlag,
     RecvAckMessage, RecvMessage, SendAckMessage, SendMessage, Setting, SubscribeAckMessage, SubscribeMessage,
 };
 
