@@ -23,24 +23,25 @@ fn main() {
     ////////////////////////////////////////////////////////////////////////////////////
     ///////////////////// --------- 连接服务器消息
     ////////////////////////////////////////////////////////////////////////////////////
+    // 初始化随机数生成器并生成随机字节
     let mut rng = OsRng;
-    let mut random_bytes = [0u8; 32]; // Scalar 在 curve25519-dalek 中是 32 字节
+    let mut random_bytes = [0u8; 64]; // Scalar 在 curve25519-dalek 中仍然是 64 字节
     rng.fill_bytes(&mut random_bytes);
 
-    // 使用 from_bits 方法创建 Scalar 实例
-    let dh_private_key = Scalar::from_bits(random_bytes);
+    // 使用 from_bytes_mod_order_wide 方法创建 Scalar 实例
+    let dh_private_key = Scalar::from_bytes_mod_order_wide(&random_bytes);
 
     // 模拟服务端公钥（实际上应该从 ConnectAckMessage 中获得）
     let server_pub_key = RISTRETTO_BASEPOINT_POINT * dh_private_key;
-    let server_pub_key_bytes = server_pub_key.compress().to_bytes();
+    let server_pub_key_bytes = server_pub_key.compress().as_bytes().to_vec();
     let server_pub_key_base64 = BASE64_STANDARD.encode(&server_pub_key_bytes);
-    
+
     println!("Generated server_pub_key_base64: {}", server_pub_key_base64);
 
     // 计算共享密钥
     let shared_secret = dh_private_key * server_pub_key;
     // 将共享密钥转换为 CompressedRistretto，然后转换为字节数组
-    let shared_secret_bytes = shared_secret.compress().to_bytes();
+    let shared_secret_bytes = shared_secret.compress().as_bytes().to_vec();
 
     // 使用 MD5 计算哈希值
     let mut hasher = Md5::new();

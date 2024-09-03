@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 rand = "0.8"
-curve25519-dalek = "3.2"
+curve25519-dalek = "4"
 base64 = "0.22"
 md-5 = "0.10"
 uuid = { version = "1", features = ["v4"] }
