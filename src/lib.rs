@@ -1,3 +1,8 @@
+pub mod encoder;
+pub mod decoder;
+pub mod packet;
+pub mod security;
+
 use md5::{Digest, Md5};
 use uuid::Uuid;
 use num_bigint::BigUint;
@@ -7,14 +12,14 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use base64::{engine::general_purpose, Engine as _};
 
-use crate::protocol::decoder::Decoder;
-use crate::protocol::encoder::Encoder;
-use crate::protocol::packet::{
+use crate::decoder::Decoder;
+use crate::encoder::Encoder;
+use crate::packet::{
     ConnectAckMessage, ConnectMessage, DisconnectMessage, Packet, StreamFlag,
     RecvAckMessage, RecvMessage, SendAckMessage, SendMessage, Setting, SubscribeAckMessage, SubscribeMessage,
 };
 
-use crate::protocol::security::SecurityManager;
+use crate::security::SecurityManager;
 
 static mut PROTOCOL_VERSION: u8 = 0; // 服务端返回的协议版本
 

@@ -1,11 +1,10 @@
 
 use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine};
 use md5::{Md5, Digest};
-use protocol::security::SecurityManager;
-mod protocol;
+use privchat_protocol::security::SecurityManager;
 
-use protocol::packet::*;
-use protocol::protocol::Protocol;
+use privchat_protocol::packet::*;
+use privchat_protocol::Protocol;
 
 use num_bigint::BigInt;
 use curve25519_dalek::scalar::Scalar;
