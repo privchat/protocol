@@ -1,6 +1,6 @@
 pub mod encoder;
 pub mod decoder;
-pub mod packet;
+pub mod message;
 pub mod security;
 
 use md5::{Digest, Md5};
@@ -14,7 +14,7 @@ use base64::{engine::general_purpose, Engine as _};
 
 use crate::decoder::Decoder;
 use crate::encoder::Encoder;
-use crate::packet::{
+use crate::message::{
     ConnectAckMessage, ConnectMessage, DisconnectMessage, Packet, StreamFlag,
     RecvAckMessage, RecvMessage, SendAckMessage, SendMessage, Setting, SubscribeAckMessage, SubscribeMessage,
 };
@@ -23,6 +23,7 @@ use crate::security::SecurityManager;
 
 static mut PROTOCOL_VERSION: u8 = 0; // 服务端返回的协议版本
 
+#[derive(Clone)]
 pub struct Protocol {
     message_encode_map: HashMap<TypeId, fn(&dyn Any) -> Vec<u8>>,
     packet_decode_map: HashMap<TypeId, fn(&mut Decoder) -> Box<dyn Any>>,

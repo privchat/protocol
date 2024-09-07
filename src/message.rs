@@ -1,11 +1,12 @@
 use num_bigint::BigInt;
 use std::any::Any;
+use std::convert::TryFrom;
 
 static mut PROTOCOL_VERSION: u8 = 0; // 服务端返回的协议版本
 
 // 消息类型
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
-pub enum MesssageType {
+pub enum MessageType {
     Reserved = 0,   // 保留位
     Connect = 1,    // 客户端请求连接到服务器(c2s)
     ConnectAck = 2, // 服务端收到连接请求后确认的报文(s2c)
@@ -18,6 +19,40 @@ pub enum MesssageType {
     Disconnect = 9, // 请求断开连接
     Subscribe = 10,       // 订阅
     SubscribeAck = 11,    // 订阅确认
+}
+
+impl MessageType {
+    pub fn to_u32(&self) -> u32 {
+        *self as u32
+    }
+}
+
+impl From<MessageType> for u32 {
+    fn from(msg_type: MessageType) -> Self {
+        msg_type as u32
+    }
+}
+
+impl TryFrom<u32> for MessageType {
+    type Error = ();
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(MessageType::Reserved),
+            1 => Ok(MessageType::Connect),
+            2 => Ok(MessageType::ConnectAck),
+            3 => Ok(MessageType::Send),
+            4 => Ok(MessageType::SendAck),
+            5 => Ok(MessageType::Recv),
+            6 => Ok(MessageType::RecvAck),
+            7 => Ok(MessageType::Ping),
+            8 => Ok(MessageType::Pong),
+            9 => Ok(MessageType::Disconnect),
+            10 => Ok(MessageType::Subscribe),
+            11 => Ok(MessageType::SubscribeAck),
+            _ => Err(()), // 如果传入的 u32 不是有效的消息类型，则返回错误
+        }
+    }
 }
 
 // 设置
@@ -87,12 +122,12 @@ pub struct Packet<T> {
     pub sync_once: bool,
     pub dup: bool,
     pub remaining_length: usize,
-    pub message_type: MesssageType,
+    pub message_type: MessageType,
     pub message_object: T,
 }
 
 impl<T> Packet<T> {
-    pub fn new(message_object: T, message_type: MesssageType) -> Self {
+    pub fn new(message_object: T, message_type: MessageType) -> Self {
         Self {
             no_persist: false,
             reddot: false,
@@ -140,7 +175,7 @@ impl ConnectMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::Connect)
+        Packet::new(Box::new(self), MessageType::Connect)
     }
 
     pub fn as_any(&self) -> &dyn Any {
@@ -172,7 +207,7 @@ impl ConnectAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::ConnectAck)
+        Packet::new(Box::new(self), MessageType::ConnectAck)
     }
 }
 
@@ -192,7 +227,7 @@ impl DisconnectMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::Disconnect)
+        Packet::new(Box::new(self), MessageType::Disconnect)
     }
 }
 
@@ -228,7 +263,7 @@ impl SendMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::Send)
+        Packet::new(Box::new(self), MessageType::Send)
     }
 
     pub fn verify_string(&self) -> String {
@@ -299,7 +334,7 @@ impl RecvMessage {
         }
     }
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::Recv)
+        Packet::new(Box::new(self), MessageType::Recv)
     }
 
     pub fn verify_string(&self) -> String {
@@ -338,7 +373,7 @@ impl SendAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::SendAck)
+        Packet::new(Box::new(self), MessageType::SendAck)
     }
 }
 
@@ -358,7 +393,7 @@ impl RecvAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::RecvAck)
+        Packet::new(Box::new(self), MessageType::RecvAck)
     }
 }
 
@@ -385,7 +420,7 @@ impl SubscribeMessage {
         }
     }
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::Subscribe)
+        Packet::new(Box::new(self), MessageType::Subscribe)
     }
 }
 
@@ -411,6 +446,6 @@ impl SubscribeAckMessage {
     }
 
     pub fn create_packet(self) -> Packet<Box<dyn Any>> {
-        Packet::new(Box::new(self), MesssageType::SubscribeAck)
+        Packet::new(Box::new(self), MessageType::SubscribeAck)
     }
 }

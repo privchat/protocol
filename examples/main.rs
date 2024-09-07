@@ -3,7 +3,7 @@ use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine};
 use md5::{Md5, Digest};
 use privchat_protocol::security::SecurityManager;
 
-use privchat_protocol::packet::*;
+use privchat_protocol::message::*;
 use privchat_protocol::Protocol;
 
 use num_bigint::BigInt;
